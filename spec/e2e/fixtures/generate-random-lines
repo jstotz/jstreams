@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'securerandom'
+
+File.open('./random-sorted-1000.txt', 'w') do |f|
+  ARGV[0].to_i.times { puts(SecureRandom.hex) }
+end

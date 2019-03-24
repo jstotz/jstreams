@@ -1,0 +1,28 @@
+version: "3.7"
+
+x-example: &example
+  working_dir: /opt/jstreams/examples/basic
+  build:
+    context: ../..
+  environment:
+    REDIS_URL: redis://redis
+  volumes:
+    - ../..:/opt/jstreams
+  depends_on:
+    - redis
+
+services:
+  redis:
+    image: redis:5
+
+  publisher:
+    <<: *example
+    command: ["ruby", "example_publisher.rb"]
+
+  subscriber1:
+    <<: *example
+    command: ["ruby", "example_subscriber.rb", "subscriber1"]
+
+  subscriber2:
+    <<: *example
+    command: ["ruby", "example_subscriber.rb", "subscriber2"]
