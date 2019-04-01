@@ -4,6 +4,10 @@ A distributed streaming platform for Ruby built on top of Redis Streams.
 
 Provides a multi-threaded publisher/subscriber.
 
+## Project Status
+
+This is alpha software and not suitable for production use.
+
 ## Roadmap
 
 - [ ] Load balancing across named consumer groups
