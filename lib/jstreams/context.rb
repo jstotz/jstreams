@@ -42,7 +42,8 @@ module Jstreams
 
     def run
       Thread.abort_on_exception = true
-      @subscribers.each { |subscriber| Thread.new { subscriber.run }.join }
+      threads = @subscribers.map { |subscriber| Thread.new { subscriber.run } }
+      threads.each(&:join)
     end
   end
 end
