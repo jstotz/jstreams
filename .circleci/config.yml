@@ -5,6 +5,8 @@
 version: 2
 jobs:
   build:
+    environment:
+      CC_TEST_REPORTER_ID: 39a8db06d352bcba2317f98a25be94272acd12de35444a8b4cd2de7c1a1fe2ef
     docker:
       - image: circleci/ruby:2.5-node-browsers
       - image: circleci/redis:5
@@ -22,12 +24,18 @@ jobs:
             - v1-dependencies-
 
       - run:
-          name: upgrade bundler
+          name: Upgrade bundler
           command: |
             gem install bundler
 
       - run:
-          name: install dependencies
+          name: Setup Code Climate test-reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
+
+      - run:
+          name: Install dependencies
           command: |
             bundle install --jobs=4 --retry=3 --path vendor/bundle
 
@@ -38,19 +46,22 @@ jobs:
 
       # run tests!
       - run:
-          name: run tests
+          name: Run tests
           command: |
             mkdir /tmp/test-results
             TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | \
               circleci tests split --split-by=timings)"
 
-            bundle exec rspec \
+            ./cc-test-reporter before-build
+
+            COVERAGE=true bundle exec rspec \
               --format progress \
               --format RspecJunitFormatter \
               --out /tmp/test-results/rspec.xml \
               --format progress \
               $TEST_FILES
 
+            ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
       # collect reports
       - store_test_results:
           path: /tmp/test-results

@@ -1,4 +1,5 @@
 # jstreams
+[![CircleCI](https://circleci.com/gh/jstotz/jstreams.svg?style=svg)](https://circleci.com/gh/jstotz/jstreams)
 
 A distributed streaming platform for Ruby built on top of Redis Streams.
 
