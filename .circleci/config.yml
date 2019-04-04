@@ -61,7 +61,7 @@ jobs:
               --format progress \
               $TEST_FILES
 
-            ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
+            ./cc-test-reporter after-build --coverage-input-type simplecov --exit-code $?
       # collect reports
       - store_test_results:
           path: /tmp/test-results
