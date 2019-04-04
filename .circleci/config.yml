@@ -11,4 +11,4 @@ jobs:
 
       - run:
           name: Single Subscriber E2E Test
-          command: cd ~/repo/spec/e2e/single-subscriber && ./test
+          command: cd spec/e2e/single-subscriber && ./test
