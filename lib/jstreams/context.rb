@@ -1,4 +1,5 @@
 require 'json'
+require 'connection_pool'
 require 'active_support/tagged_logging'
 
 require_relative 'serializers/json'
@@ -10,15 +11,20 @@ module Jstreams
     attr_reader :redis, :serializer, :logger
 
     def initialize(
-      redis: ::Redis.new,
+      redis_url: nil,
       serializer: Serializers::JSON.new,
       logger: Logger.new(File::NULL)
     )
-      @redis = redis
+      # TODO: configurable/smart default pool size
+      @redis_pool =
+        ::ConnectionPool.new(size: 10, timeout: 5) { Redis.new(url: redis_url) }
       @serializer = serializer
-      @publisher = Publisher.new(redis: redis, serializer: serializer)
       logger.formatter ||= ::Logger::Formatter.new
       @logger = ::ActiveSupport::TaggedLogging.new(logger)
+      @publisher =
+        Publisher.new(
+          redis_pool: @redis_pool, serializer: serializer, logger: @logger
+        )
       @subscribers = []
     end
 
@@ -27,9 +33,9 @@ module Jstreams
     end
 
     def subscribe(name, streams, key: name, &block)
-      @subscribers.push(
+      subscriber =
         Subscriber.new(
-          redis: @redis,
+          redis_pool: @redis_pool,
           logger: @logger,
           serializer: @serializer,
           name: name,
@@ -37,7 +43,8 @@ module Jstreams
           streams: Array(streams),
           handler: block
         )
-      )
+      @subscribers << subscriber
+      subscriber
     end
 
     def run

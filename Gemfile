@@ -1,7 +1,14 @@
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in jstreams.gemspec
 gemspec
+
+group :test do
+  gem 'guard'
+  gem 'guard-rspec'
+  gem 'rspec', '~> 3.0'
+  gem 'rspec_junit_formatter'
+  gem 'simplecov'
+end
 
 group :development do
   gem 'pry'

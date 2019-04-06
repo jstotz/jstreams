@@ -1,12 +1,12 @@
 module Jstreams
   class Subscriber
     def initialize(
-      name:, key: name, streams:, redis:, serializer:, handler:, logger:
+      name:, key: name, streams:, redis_pool:, serializer:, handler:, logger:
     )
       @name = name
       @key = key
       @streams = streams
-      @redis = redis
+      @redis_pool = redis_pool
       @serializer = serializer
       @handler = handler
       @logger = logger
@@ -29,7 +29,7 @@ module Jstreams
 
     private
 
-    READ_TIMEOUT_MS = 1000
+    READ_TIMEOUT_MS = 250
 
     attr_reader :name, :key, :logger, :handler, :streams, :redis, :serializer
 
@@ -37,12 +37,15 @@ module Jstreams
     alias_method :consumer_name, :key
 
     def process_messages
-      results = read_group
-      logger.debug 'timed out waiting for messages' if results.empty?
-      results.each do |stream, entries|
-        entries.each do |id, entry|
-          logger.tagged("stream:#{stream}", "id:#{id}") do
-            handle_entry(stream, id, entry)
+      @redis_pool.with do |redis|
+        @redis = redis
+        results = read_group
+        logger.debug 'timed out waiting for messages' if results.empty?
+        results.each do |stream, entries|
+          entries.each do |id, entry|
+            logger.tagged("stream:#{stream}", "id:#{id}") do
+              handle_entry(stream, id, entry)
+            end
           end
         end
       end
