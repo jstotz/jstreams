@@ -49,6 +49,7 @@ module Jstreams
     end
 
     def run(wait: true)
+      trap('INT') { @subscribers.each(&:stop) }
       Thread.abort_on_exception = true
       @subscriber_threads =
         @subscribers.map { |subscriber| Thread.new { subscriber.run } }
