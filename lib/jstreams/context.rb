@@ -13,7 +13,7 @@ module Jstreams
     def initialize(
       redis_url: nil,
       serializer: Serializers::JSON.new,
-      logger: Logger.new(File::NULL)
+      logger: Logger.new(ENV['JSTREAMS_VERBOSE'] ? STDOUT : File::NULL)
     )
       # TODO: configurable/smart default pool size
       @redis_pool =
