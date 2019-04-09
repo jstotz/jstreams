@@ -1,5 +1,9 @@
 require 'bundler/setup'
 
+require 'pry'
+require 'byebug'
+require 'pry-stack_explorer'
+
 if ENV['COVERAGE']
   require 'simplecov'
   SimpleCov.start
