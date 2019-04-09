@@ -42,8 +42,8 @@ module Jstreams
     private
 
     READ_TIMEOUT = 0.25 # seconds
-    ABANDONED_MESSAGE_CHECK_INTERVAL = 5 # seconds
-    ABANDONED_MESSAGE_IDLE_TIMEOUT = 5 # seconds
+    ABANDONED_MESSAGE_CHECK_INTERVAL = 10 # seconds
+    ABANDONED_MESSAGE_IDLE_TIMEOUT = 600 # seconds
     ABANDONED_MESSAGE_BATCH_SIZE = 100
 
     attr_reader :name,
