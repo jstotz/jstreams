@@ -14,10 +14,11 @@ RSpec.describe 'multiple subscribers' do
     received = Concurrent::Array.new
 
     subscribers =
-      3.times.map do
+      3.times.map do |i|
         jstreams.subscribe(
           'mysubscriber',
-          'mystream'
+          'mystream',
+          key: "consumer#{i}"
         ) do |message, _stream, subscriber|
           received << message
           subscribers.each(&:stop) if received.size >= published.size
