@@ -8,7 +8,7 @@ require_relative 'subscriber'
 
 module Jstreams
   class Context
-    attr_reader :redis, :serializer, :logger
+    attr_reader :redis_pool, :serializer, :logger
 
     def initialize(
       redis_url: nil,
