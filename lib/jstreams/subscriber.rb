@@ -1,7 +1,14 @@
 module Jstreams
   class Subscriber
     def initialize(
-      name:, key: name, streams:, redis_pool:, serializer:, handler:, logger:
+      name:,
+      key: name,
+      streams:,
+      redis_pool:,
+      serializer:,
+      handler:,
+      logger:,
+      error_handler: nil
     )
       @name = name
       @key = key
@@ -9,6 +16,7 @@ module Jstreams
       @redis_pool = redis_pool
       @serializer = serializer
       @handler = handler
+      @error_handler = error_handler
       @logger = logger
     end
 
@@ -58,7 +66,7 @@ module Jstreams
           consumer_group,
           consumer_name,
           streams,
-          '>',
+          streams.map { '>' },
           block: READ_TIMEOUT_MS
         )
     rescue ::Redis::CommandError => e
@@ -71,8 +79,13 @@ module Jstreams
 
     def handle_entry(stream, id, entry)
       logger.debug { "received raw entry: #{entry.inspect}" }
-      handler.call(deserialize_entry(stream, id, entry), stream, self)
-      redis.xack(stream, consumer_group, id)
+      begin
+        handler.call(deserialize_entry(stream, id, entry), stream, self)
+        redis.xack(stream, consumer_group, id)
+      rescue => e
+        raise e if @error_handler.nil?
+        @error_handler.call(e, stream, id, entry)
+      end
     end
 
     def deserialize_entry(stream, id, entry)

@@ -32,7 +32,7 @@ module Jstreams
       @publisher.publish(stream, message)
     end
 
-    def subscribe(name, streams, key: name, &block)
+    def subscribe(name, streams, key: name, error_handler: nil, &block)
       subscriber =
         Subscriber.new(
           redis_pool: @redis_pool,
@@ -41,7 +41,8 @@ module Jstreams
           name: name,
           key: key,
           streams: Array(streams),
-          handler: block
+          handler: block,
+          error_handler: error_handler
         )
       @subscribers << subscriber
       subscriber
