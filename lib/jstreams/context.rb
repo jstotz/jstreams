@@ -32,7 +32,7 @@ module Jstreams
       @publisher.publish(stream, message)
     end
 
-    def subscribe(name, streams, key: name, error_handler: nil, &block)
+    def subscribe(name, streams, key: name, **kwargs, &block)
       subscriber =
         Subscriber.new(
           redis_pool: @redis_pool,
@@ -42,14 +42,14 @@ module Jstreams
           key: key,
           streams: Array(streams),
           handler: block,
-          error_handler: error_handler
+          **kwargs
         )
       @subscribers << subscriber
       subscriber
     end
 
     def run(wait: true)
-      trap('INT') { @subscribers.each(&:stop) }
+      trap('INT') { shutdown }
       Thread.abort_on_exception = true
       @subscriber_threads =
         @subscribers.map { |subscriber| Thread.new { subscriber.run } }
@@ -58,6 +58,10 @@ module Jstreams
 
     def wait_for_shutdown
       @subscriber_threads.each(&:join)
+    end
+
+    def shutdown
+      @subscribers.each(&:stop)
     end
   end
 end

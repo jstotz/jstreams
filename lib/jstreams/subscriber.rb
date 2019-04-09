@@ -8,7 +8,9 @@ module Jstreams
       serializer:,
       handler:,
       logger:,
-      error_handler: nil
+      error_handler: nil,
+      abandoned_message_check_interval: ABANDONED_MESSAGE_CHECK_INTERVAL,
+      abandoned_message_idle_timeout: ABANDONED_MESSAGE_IDLE_TIMEOUT
     )
       @name = name
       @key = key
@@ -18,6 +20,8 @@ module Jstreams
       @handler = handler
       @error_handler = error_handler
       @logger = logger
+      @abandoned_message_check_interval = abandoned_message_check_interval
+      @abandoned_message_idle_timeout = abandoned_message_idle_timeout
     end
 
     def run
@@ -37,9 +41,20 @@ module Jstreams
 
     private
 
-    READ_TIMEOUT_MS = 250
+    READ_TIMEOUT = 0.25 # seconds
+    ABANDONED_MESSAGE_CHECK_INTERVAL = 5 # seconds
+    ABANDONED_MESSAGE_IDLE_TIMEOUT = 5 # seconds
+    ABANDONED_MESSAGE_BATCH_SIZE = 100
 
-    attr_reader :name, :key, :logger, :handler, :streams, :redis, :serializer
+    attr_reader :name,
+                :key,
+                :logger,
+                :handler,
+                :streams,
+                :redis,
+                :serializer,
+                :abandoned_message_check_interval,
+                :abandoned_message_idle_timeout
 
     alias_method :consumer_group, :name
     alias_method :consumer_name, :key
@@ -47,7 +62,7 @@ module Jstreams
     def process_messages
       @redis_pool.with do |redis|
         @redis = redis
-        results = read_group
+        results = read_messages
         logger.debug 'timed out waiting for messages' if results.empty?
         results.each do |stream, entries|
           entries.each do |id, entry|
@@ -59,6 +74,68 @@ module Jstreams
       end
     end
 
+    def read_messages
+      logger.debug do
+        "Reading messages (time to reclaim?: #{time_to_reclaim?}, last reclaim: #{@last_reclaim_time})"
+      end
+      results = {}
+      results.merge!(reclaim_abandoned_messages) if time_to_reclaim?
+      results.merge!(read_group)
+      results
+    end
+
+    def reclaim_abandoned_messages
+      logger.debug 'Looking for abandoned messages to reclaim'
+      results = Hash.new { |h, k| h[k] = [] }
+      @redis_pool.with do |redis|
+        streams.each do |stream|
+          reclaim_ids = []
+          # TODO: pagination & configurable batch size
+          redis.xpending(
+            stream,
+            consumer_group,
+            '-',
+            '+',
+            ABANDONED_MESSAGE_BATCH_SIZE
+          )
+            .each do |pe|
+            next if pe['consumer'] == consumer_name
+            if pe['elapsed'] >= (abandoned_message_idle_timeout * 1000)
+              logger.info "Reclaiming abandoned message #{pe[
+                            'entry_id'
+                          ]} from consumer #{pe['consumer']}"
+              reclaim_ids << pe['entry_id']
+            end
+          end
+          next if reclaim_ids.empty?
+          claimed =
+            redis.xclaim(
+              stream,
+              consumer_group,
+              consumer_name,
+              (abandoned_message_idle_timeout * 1000).round,
+              reclaim_ids
+            )
+          results[stream] = claimed unless claimed.empty?
+        end
+        @last_reclaim_time = Time.now
+        logger.debug do
+          "Done looking for abandoned messages to reclaim. Found: #{results
+            .inspect}"
+        end
+        results
+      rescue Redis::CommandError => e
+        raise e unless e.message =~ /NOGROUP/
+        logger.debug "Couldn't reclaim messages because group does not exist yet"
+        {}
+      end
+    end
+
+    def time_to_reclaim?
+      @last_reclaim_time.nil? ||
+        (Time.now - @last_reclaim_time) >= abandoned_message_check_interval
+    end
+
     def read_group
       logger.debug 'calling xreadgroup'
       results =
@@ -67,7 +144,7 @@ module Jstreams
           consumer_name,
           streams,
           streams.map { '>' },
-          block: READ_TIMEOUT_MS
+          block: READ_TIMEOUT * 1000
         )
     rescue ::Redis::CommandError => e
       if e.message =~ /NOGROUP/
