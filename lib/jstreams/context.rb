@@ -48,10 +48,15 @@ module Jstreams
       subscriber
     end
 
-    def run
+    def run(wait: true)
       Thread.abort_on_exception = true
-      threads = @subscribers.map { |subscriber| Thread.new { subscriber.run } }
-      threads.each(&:join)
+      @subscriber_threads =
+        @subscribers.map { |subscriber| Thread.new { subscriber.run } }
+      wait_for_shutdown if wait
+    end
+
+    def wait_for_shutdown
+      @subscriber_threads.each(&:join)
     end
   end
 end
