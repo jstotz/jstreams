@@ -100,37 +100,10 @@ module Jstreams
 
     def reclaim_abandoned_messages
       logger.debug 'Looking for abandoned messages to reclaim'
-      results = Hash.new { |h, k| h[k] = [] }
+      results = {}
       @redis_pool.with do |redis|
         streams.each do |stream|
-          reclaim_ids = []
-          # TODO: pagination & configurable batch size
-          redis.xpending(
-            stream,
-            consumer_group,
-            '-',
-            '+',
-            ABANDONED_MESSAGE_BATCH_SIZE
-          )
-            .each do |pe|
-            next if pe['consumer'] == consumer_name
-            if pe['elapsed'] >= (abandoned_message_idle_timeout * 1000)
-              logger.info "Reclaiming abandoned message #{pe[
-                            'entry_id'
-                          ]} from consumer #{pe['consumer']}"
-              reclaim_ids << pe['entry_id']
-            end
-          end
-          next if reclaim_ids.empty?
-          claimed =
-            redis.xclaim(
-              stream,
-              consumer_group,
-              consumer_name,
-              (abandoned_message_idle_timeout * 1000).round,
-              reclaim_ids
-            )
-          results[stream] = claimed unless claimed.empty?
+          results.merge!(reclaim_abandoned_messages_in_stream(stream))
         end
         @last_reclaim_time = Time.now
         logger.debug do
@@ -143,6 +116,39 @@ module Jstreams
       raise e unless e.message =~ /NOGROUP/
       logger.debug "Couldn't reclaim messages because group does not exist yet"
       {}
+    end
+
+    def reclaim_abandoned_messages_in_stream(stream)
+      reclaim_ids = []
+      # TODO: pagination & configurable batch size
+      read_pending(stream, ABANDONED_MESSAGE_BATCH_SIZE).each do |pe|
+        next if pe['consumer'] == consumer_name
+        next unless abandoned_pending_entry?(pe)
+        logger.info "Reclaiming abandoned message #{pe['entry_id']}" \
+                      " from consumer #{pe['consumer']}"
+        reclaim_ids << pe['entry_id']
+      end
+
+      return { stream => [] } if reclaim_ids.empty?
+
+      {
+        stream =>
+          redis.xclaim(
+            stream,
+            consumer_group,
+            consumer_name,
+            (abandoned_message_idle_timeout * 1000).round,
+            reclaim_ids
+          )
+      }
+    end
+
+    def abandoned_pending_entry?(pending_entry)
+      pending_entry['elapsed'] >= (abandoned_message_idle_timeout * 1000)
+    end
+
+    def read_pending(stream, count)
+      redis.xpending(stream, consumer_group, '-', '+', count)
     end
 
     def time_to_reclaim?
