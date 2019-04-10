@@ -22,7 +22,7 @@ RSpec.describe 'multiple subscribers' do
           'mysubscriber',
           'mystream',
           key: "consumer#{i}"
-        ) do |message, _stream, subscriber|
+        ) do |message, _stream, _subscriber|
           received << message
           subscribers.each(&:stop) if received.size >= published.size
         end
@@ -46,7 +46,7 @@ RSpec.describe 'multiple subscribers' do
         key: 'consumer-stopped',
         error_handler:
           ->(err, _, _, _) { jstreams.logger.debug "Ignoring error: #{err}" }
-      ) do |message, _stream, subscriber|
+      ) do |_message, _stream, subscriber|
         subscriber.stop
         raise 'fail'
       end
@@ -61,9 +61,10 @@ RSpec.describe 'multiple subscribers' do
             key: consumer_key,
             abandoned_message_check_interval: 0.25,
             abandoned_message_idle_timeout: 0.25
-          ) do |message, _stream, subscriber|
+          ) do |message, _stream, _subscriber|
             received_by_consumer[consumer_key] << message
-            total_received_count = received_by_consumer.values.map(&:size).reduce(:+)
+            total_received_count =
+              received_by_consumer.values.map(&:size).reduce(:+)
             subscribers.each(&:stop) if total_received_count >= published.size
           end
         end
@@ -79,7 +80,9 @@ RSpec.describe 'multiple subscribers' do
       rescue Timeout::Error => e
         raise "Timed out. Received #{received_by_consumer.map do |key, values|
                 "#{key}: #{values.size}"
-              end} (total: #{received_by_consumer.values.map(&:size).reduce(:+)})"
+              end} (total: #{received_by_consumer.values.map(&:size).reduce(
+                :+
+              )})"
       end
 
       expect(received_by_consumer.values.flatten.uniq).to match_array(published)
@@ -97,7 +100,7 @@ RSpec.describe 'multiple subscribers' do
         'mysubscriber',
         'mystream',
         key: 'consumer-stopped'
-      ) { |message, _stream, subscriber| Thread.current.kill }
+      ) { |_message, _stream, _subscriber| Thread.current.kill }
 
       # These subscribers should pick up the work left behind
       subscribers =
@@ -109,9 +112,10 @@ RSpec.describe 'multiple subscribers' do
             key: consumer_key,
             abandoned_message_check_interval: 0.25,
             abandoned_message_idle_timeout: 0.25
-          ) do |message, _stream, subscriber|
+          ) do |message, _stream, _subscriber|
             received_by_consumer[consumer_key] << message
-            total_received_count = received_by_consumer.values.map(&:size).reduce(:+)
+            total_received_count =
+              received_by_consumer.values.map(&:size).reduce(:+)
             subscribers.each(&:stop) if total_received_count >= published.size
           end
         end
@@ -127,7 +131,9 @@ RSpec.describe 'multiple subscribers' do
       rescue Timeout::Error => e
         raise "Timed out. Received #{received_by_consumer.map do |key, values|
                 "#{key}: #{values.size}"
-              end} (total: #{received_by_consumer.values.map(&:size).reduce(:+)})"
+              end} (total: #{received_by_consumer.values.map(&:size).reduce(
+                :+
+              )})"
       end
 
       expect(received_by_consumer.values.flatten.uniq).to match_array(published)

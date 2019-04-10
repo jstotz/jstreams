@@ -11,11 +11,11 @@ group :test do
 end
 
 group :development do
+  gem 'byebug'
   gem 'pry'
+  gem 'pry-byebug'
   gem 'pry-rescue'
   gem 'pry-stack_explorer'
-  gem 'pry-byebug'
   gem 'rubocop'
   gem 'rubocop-performance'
-  gem 'byebug'
 end

@@ -161,7 +161,7 @@ module Jstreams
         block: block
       )
     rescue ::Redis::CommandError => e
-      if e.message =~ /NOGROUP/
+      if /NOGROUP/.match?(e.message)
         create_consumer_groups
         retry
       end
@@ -199,7 +199,7 @@ module Jstreams
           logger.info "Creating consumer group #{consumer_group} for stream #{stream}"
           redis.xgroup(:create, stream, consumer_group, 0, mkstream: true)
         rescue ::Redis::CommandError => e
-          if e.message =~ /BUSYGROUP/
+          if /BUSYGROUP/.match?(e.message)
             logger.info 'Consumer group already exists'
           end
         end

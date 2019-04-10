@@ -35,7 +35,7 @@ RSpec.describe 'single subscriber' do
         'mysubscriber',
         'mystream',
         key: 'myconsumer', error_handler: ->(*_args) {  }
-      ) do |message, _stream, subscriber|
+      ) do |_message, _stream, subscriber|
         subscriber.stop
         raise 'fail'
       end
