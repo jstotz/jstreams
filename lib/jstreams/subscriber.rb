@@ -101,17 +101,15 @@ module Jstreams
     def reclaim_abandoned_messages
       logger.debug 'Looking for abandoned messages to reclaim'
       results = {}
-      @redis_pool.with do |redis|
-        streams.each do |stream|
-          results[stream] = reclaim_abandoned_messages_in_stream(stream)
-        end
-        @last_reclaim_time = Time.now
-        logger.debug do
-          "Done looking for abandoned messages to reclaim. Found: #{results
-            .inspect}"
-        end
-        results
+      streams.each do |stream|
+        results[stream] = reclaim_abandoned_messages_in_stream(stream)
       end
+      @last_reclaim_time = Time.now
+      logger.debug do
+        "Done looking for abandoned messages to reclaim. Found: #{results
+          .inspect}"
+      end
+      results
     rescue Redis::CommandError => e
       raise e unless e.message =~ /NOGROUP/
       logger.debug "Couldn't reclaim messages because group does not exist yet"
