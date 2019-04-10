@@ -138,11 +138,11 @@ module Jstreams
             .inspect}"
         end
         results
-      rescue Redis::CommandError => e
-        raise e unless e.message =~ /NOGROUP/
-        logger.debug "Couldn't reclaim messages because group does not exist yet"
-        {}
       end
+    rescue Redis::CommandError => e
+      raise e unless e.message =~ /NOGROUP/
+      logger.debug "Couldn't reclaim messages because group does not exist yet"
+      {}
     end
 
     def time_to_reclaim?

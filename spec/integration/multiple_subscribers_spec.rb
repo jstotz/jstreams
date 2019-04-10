@@ -63,7 +63,7 @@ RSpec.describe 'multiple subscribers' do
             abandoned_message_idle_timeout: 0.25
           ) do |message, _stream, subscriber|
             received_by_consumer[consumer_key] << message
-            total_received_count = received_by_consumer.values.sum(&:size)
+            total_received_count = received_by_consumer.values.map(&:size).reduce(:+)
             subscribers.each(&:stop) if total_received_count >= published.size
           end
         end
@@ -79,7 +79,7 @@ RSpec.describe 'multiple subscribers' do
       rescue Timeout::Error => e
         raise "Timed out. Received #{received_by_consumer.map do |key, values|
                 "#{key}: #{values.size}"
-              end} (total: #{received_by_consumer.values.sum(&:size)})"
+              end} (total: #{received_by_consumer.values.map(&:size).reduce(:+)})"
       end
 
       expect(received_by_consumer.values.flatten.uniq).to match_array(published)
@@ -111,7 +111,7 @@ RSpec.describe 'multiple subscribers' do
             abandoned_message_idle_timeout: 0.25
           ) do |message, _stream, subscriber|
             received_by_consumer[consumer_key] << message
-            total_received_count = received_by_consumer.values.sum(&:size)
+            total_received_count = received_by_consumer.values.map(&:size).reduce(:+)
             subscribers.each(&:stop) if total_received_count >= published.size
           end
         end
@@ -127,7 +127,7 @@ RSpec.describe 'multiple subscribers' do
       rescue Timeout::Error => e
         raise "Timed out. Received #{received_by_consumer.map do |key, values|
                 "#{key}: #{values.size}"
-              end} (total: #{received_by_consumer.values.sum(&:size)})"
+              end} (total: #{received_by_consumer.values.map(&:size).reduce(:+)})"
       end
 
       expect(received_by_consumer.values.flatten.uniq).to match_array(published)
