@@ -103,7 +103,7 @@ module Jstreams
       results = {}
       @redis_pool.with do |redis|
         streams.each do |stream|
-          results.merge!(reclaim_abandoned_messages_in_stream(stream))
+          results[stream] = reclaim_abandoned_messages_in_stream(stream)
         end
         @last_reclaim_time = Time.now
         logger.debug do
@@ -122,25 +122,22 @@ module Jstreams
       reclaim_ids = []
       # TODO: pagination & configurable batch size
       read_pending(stream, ABANDONED_MESSAGE_BATCH_SIZE).each do |pe|
-        next if pe['consumer'] == consumer_name
-        next unless abandoned_pending_entry?(pe)
-        logger.info "Reclaiming abandoned message #{pe['entry_id']}" \
-                      " from consumer #{pe['consumer']}"
-        reclaim_ids << pe['entry_id']
+        if pe['consumer'] != consumer_name && abandoned_pending_entry?(pe)
+          logger.info "Reclaiming abandoned message #{pe['entry_id']}" \
+                        " from consumer #{pe['consumer']}"
+          reclaim_ids << pe['entry_id']
+        end
       end
 
-      return { stream => [] } if reclaim_ids.empty?
+      return [] if reclaim_ids.empty?
 
-      {
-        stream =>
-          redis.xclaim(
-            stream,
-            consumer_group,
-            consumer_name,
-            (abandoned_message_idle_timeout * 1000).round,
-            reclaim_ids
-          )
-      }
+      redis.xclaim(
+        stream,
+        consumer_group,
+        consumer_name,
+        (abandoned_message_idle_timeout * 1000).round,
+        reclaim_ids
+      )
     end
 
     def abandoned_pending_entry?(pending_entry)
