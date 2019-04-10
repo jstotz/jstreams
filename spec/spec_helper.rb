@@ -6,7 +6,7 @@ require 'pry-stack_explorer'
 
 if ENV['COVERAGE']
   require 'simplecov'
-  SimpleCov.start
+  SimpleCov.start { add_filter '/spec/' }
 end
 
 require 'jstreams'
