@@ -1,0 +1,9 @@
+require: rubocop-performance
+
+AllCops:
+  TargetRubyVersion: "2.5"
+
+Style:
+  Enabled: false
+Layout:
+  Enabled: false

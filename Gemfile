@@ -15,5 +15,7 @@ group :development do
   gem 'pry-rescue'
   gem 'pry-stack_explorer'
   gem 'pry-byebug'
+  gem 'rubocop'
+  gem 'rubocop-performance'
   gem 'byebug'
 end
