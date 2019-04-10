@@ -183,6 +183,22 @@ module Jstreams
       end
     end
 
+    def handle_entry2(stream, id, entry)
+      logger.debug { "received raw entry: #{entry.inspect}" }
+      begin
+        handler.call(deserialize_entry(stream, id, entry), stream, self)
+        logger.debug { "ACK message #{[stream, consumer_group, id].inspect}" }
+        redis.xack(stream, consumer_group, id)
+      rescue => e
+        logger.debug do
+          "Error processing message #{[stream, consumer_group, id]
+            .inspect}: #{e}"
+        end
+        raise e if @error_handler.nil?
+        @error_handler.call(e, stream, id, entry)
+      end
+    end
+
     def deserialize_entry(stream, id, entry)
       serializer.deserialize(entry['payload'], stream)
     rescue => e
