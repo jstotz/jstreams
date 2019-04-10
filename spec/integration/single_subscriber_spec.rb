@@ -2,7 +2,7 @@ require 'set'
 
 RSpec.describe 'single subscriber' do
   it 'receives each published message once' do
-    published = 1000.times.map { |i| "msg#{i + 1}" }
+    published = Array.new(1000) { |i| "msg#{i + 1}" }
 
     jstreams = Jstreams::Context.new
 
@@ -35,8 +35,8 @@ RSpec.describe 'single subscriber' do
         'mysubscriber',
         'mystream',
         key: 'myconsumer', error_handler: ->(*_args) {  }
-      ) do |_message, _stream, subscriber|
-        subscriber.stop
+      ) do |_message, _stream, subscr|
+        subscr.stop
         raise 'fail'
       end
 
@@ -49,8 +49,8 @@ RSpec.describe 'single subscriber' do
       'mysubscriber',
       'mystream',
       key: 'myconsumer'
-    ) do |message, _stream, subscriber|
-      subscriber.stop
+    ) do |message, _stream, subscr|
+      subscr.stop
       received << message
     end
 

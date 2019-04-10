@@ -10,14 +10,14 @@ RSpec.describe 'multiple subscribers' do
   end
 
   it 'receives each published message once' do
-    published = 1000.times.map { |i| "msg#{i + 1}" }
+    published = Array.new(1000) { |i| "msg#{i + 1}" }
 
     Thread.new { published.each { |line| jstreams.publish('mystream', line) } }
 
     received = Concurrent::Array.new
 
     subscribers =
-      3.times.map do |i|
+      Array.new(3) do |i|
         jstreams.subscribe(
           'mysubscriber',
           'mystream',
@@ -35,7 +35,7 @@ RSpec.describe 'multiple subscribers' do
 
   context 'when a subscriber stops gracefully' do
     it 'reallocates any claimed work to the other subscribers' do
-      published = 1000.times.map { |i| "msg#{i + 1}" }
+      published = Array.new(1000) { |i| "msg#{i + 1}" }
 
       received_by_consumer = Concurrent::Hash.new { |h, k| h[k] = [] }
 
@@ -53,7 +53,7 @@ RSpec.describe 'multiple subscribers' do
 
       # These subscribers should pick up the work left behind
       subscribers =
-        3.times.map do |i|
+        Array.new(3) do |i|
           consumer_key = "consumer-#{i}"
           jstreams.subscribe(
             'mysubscriber',
@@ -77,7 +77,7 @@ RSpec.describe 'multiple subscribers' do
 
       begin
         Timeout.timeout(5) { jstreams.wait_for_shutdown }
-      rescue Timeout::Error => e
+      rescue Timeout::Error
         raise "Timed out. Received #{received_by_consumer.map do |key, values|
                 "#{key}: #{values.size}"
               end} (total: #{received_by_consumer.values.map(&:size).reduce(
@@ -91,7 +91,7 @@ RSpec.describe 'multiple subscribers' do
 
   context 'when a subscriber stops unexpectedly' do
     it 'reallocates any claimed work to the other subscribers' do
-      published = 1000.times.map { |i| "msg#{i + 1}" }
+      published = Array.new(1000) { |i| "msg#{i + 1}" }
 
       received_by_consumer = Concurrent::Hash.new { |h, k| h[k] = [] }
 
@@ -104,7 +104,7 @@ RSpec.describe 'multiple subscribers' do
 
       # These subscribers should pick up the work left behind
       subscribers =
-        3.times.map do |i|
+        Array.new(3) do |i|
           consumer_key = "consumer-#{i}"
           jstreams.subscribe(
             'mysubscriber',
@@ -128,7 +128,7 @@ RSpec.describe 'multiple subscribers' do
 
       begin
         Timeout.timeout(5) { jstreams.wait_for_shutdown }
-      rescue Timeout::Error => e
+      rescue Timeout::Error
         raise "Timed out. Received #{received_by_consumer.map do |key, values|
                 "#{key}: #{values.size}"
               end} (total: #{received_by_consumer.values.map(&:size).reduce(
