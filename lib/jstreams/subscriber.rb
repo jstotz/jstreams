@@ -22,6 +22,7 @@ module Jstreams
       @logger = logger
       @abandoned_message_check_interval = abandoned_message_check_interval
       @abandoned_message_idle_timeout = abandoned_message_idle_timeout
+      @need_to_check_own_pending = true
     end
 
     def run
@@ -78,9 +79,22 @@ module Jstreams
       logger.debug do
         "Reading messages (time to reclaim?: #{time_to_reclaim?}, last reclaim: #{@last_reclaim_time})"
       end
+      return read_own_pending if @need_to_check_own_pending
       results = {}
       results.merge!(reclaim_abandoned_messages) if time_to_reclaim?
       results.merge!(read_group)
+      results
+    end
+
+    def read_own_pending
+      logger.debug 'Reading own pending entries'
+      results = read_group(block: nil, id: 0)
+      if results.values.any? { |entries| !entries.empty? }
+        logger.debug { "Own pending entries: #{results}" }
+      else
+        logger.debug 'No pending entries'
+        @need_to_check_own_pending = false
+      end
       results
     end
 
@@ -136,16 +150,15 @@ module Jstreams
         (Time.now - @last_reclaim_time) >= abandoned_message_check_interval
     end
 
-    def read_group
+    def read_group(block: READ_TIMEOUT * 1000, id: '>')
       logger.debug 'calling xreadgroup'
-      results =
-        redis.xreadgroup(
-          consumer_group,
-          consumer_name,
-          streams,
-          streams.map { '>' },
-          block: READ_TIMEOUT * 1000
-        )
+      redis.xreadgroup(
+        consumer_group,
+        consumer_name,
+        streams,
+        streams.map { id },
+        block: block
+      )
     rescue ::Redis::CommandError => e
       if e.message =~ /NOGROUP/
         create_consumer_groups
@@ -158,8 +171,13 @@ module Jstreams
       logger.debug { "received raw entry: #{entry.inspect}" }
       begin
         handler.call(deserialize_entry(stream, id, entry), stream, self)
+        logger.debug { "ACK message #{[stream, consumer_group, id].inspect}" }
         redis.xack(stream, consumer_group, id)
       rescue => e
+        logger.debug do
+          "Error processing message #{[stream, consumer_group, id]
+            .inspect}: #{e}"
+        end
         raise e if @error_handler.nil?
         @error_handler.call(e, stream, id, entry)
       end

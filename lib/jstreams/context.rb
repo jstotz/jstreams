@@ -48,6 +48,10 @@ module Jstreams
       subscriber
     end
 
+    def unsubscribe(subscriber)
+      @subscribers.delete(subscriber)
+    end
+
     def run(wait: true)
       trap('INT') { shutdown }
       Thread.abort_on_exception = true

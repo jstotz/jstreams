@@ -22,4 +22,40 @@ RSpec.describe 'single subscriber' do
 
     expect(received).to eq(published)
   end
+
+  it 'processes its own pending messages on restart' do
+    jstreams = Jstreams::Context.new
+
+    jstreams.publish('mystream', 'foo')
+
+    received = []
+
+    subscriber =
+      jstreams.subscribe(
+        'mysubscriber',
+        'mystream',
+        key: 'myconsumer', error_handler: ->(*_args) {  }
+      ) do |message, _stream, subscriber|
+        subscriber.stop
+        raise 'fail'
+      end
+
+    Timeout.timeout(5) { jstreams.run }
+
+    jstreams.unsubscribe(subscriber)
+
+    # Resubscribe
+    jstreams.subscribe(
+      'mysubscriber',
+      'mystream',
+      key: 'myconsumer'
+    ) do |message, _stream, subscriber|
+      subscriber.stop
+      received << message
+    end
+
+    Timeout.timeout(5) { jstreams.run }
+
+    expect(received).to eq(%w[foo])
+  end
 end
