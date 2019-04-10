@@ -111,7 +111,7 @@ module Jstreams
       end
       results
     rescue Redis::CommandError => e
-      raise e unless e.message =~ /NOGROUP/
+      raise e unless e.message.match?(/NOGROUP/)
       logger.debug "Couldn't reclaim messages because group does not exist yet"
       {}
     end
