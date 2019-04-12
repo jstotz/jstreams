@@ -1,10 +1,13 @@
 require 'set'
 
 RSpec.describe 'single subscriber' do
+  before(:each) { Redis.new.flushdb }
+  after(:each) { jstreams.shutdown }
+
+  let(:jstreams) { Jstreams::Context.new }
+
   it 'receives each published message once' do
     published = Array.new(1000) { |i| "msg#{i + 1}" }
-
-    jstreams = Jstreams::Context.new
 
     Thread.new { published.each { |line| jstreams.publish('mystream', line) } }
 
@@ -24,8 +27,6 @@ RSpec.describe 'single subscriber' do
   end
 
   it 'processes its own pending messages on restart' do
-    jstreams = Jstreams::Context.new
-
     jstreams.publish('mystream', 'foo')
 
     received = []

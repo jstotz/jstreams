@@ -2,12 +2,10 @@ require 'set'
 require 'concurrent/array'
 
 RSpec.describe 'multiple subscribers' do
-  let(:jstreams) { Jstreams::Context.new }
+  before(:each) { Redis.new.flushdb }
+  after(:each) { jstreams.shutdown }
 
-  after(:each) do
-    jstreams.shutdown
-    Redis.new.flushdb
-  end
+  let(:jstreams) { Jstreams::Context.new }
 
   it 'receives each published message once' do
     published = Array.new(1000) { |i| "msg#{i + 1}" }
