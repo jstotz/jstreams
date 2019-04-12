@@ -13,11 +13,14 @@ This is alpha software and not suitable for production use.
 
 ## Roadmap
 
-- [ ] Load balancing across named consumer groups
-- [ ] Multi-threaded subscribers
+- [X] Load balancing across named consumer groups
+- [X] Automatically reclaim messages when consumers die
+- [X] Multi-threaded subscribers
+- [X] Automatic checkpoint storage
 - [ ] Configurable message serialization
-- [ ] Automatic checkpoint storage
 - [ ] Configurable retry logic
+- [ ] Replay streams from a given checkpoint
+- [ ] Wildcard subscriptions
 
 ## Installation
 
@@ -37,37 +40,42 @@ Or install it yourself as:
 
 ## Usage
 
-### Publisher
+### Example
+
+#### Publisher
 
 ```ruby
-Jstreams.publish(
-  stream: :users,
-  message_type: :user_created,
-  message: {
-    id: 1,
-    name: 'Mike Perham'
-  }
+jstreams = Jstreams::Context.new
+
+jstreams.publish(
+  :users,
+  event: 'user_created',
+  user_id: 1,  
+  name: 'King Buzzo'
 )
 
-Jstreams.publish(
-  stream: :users,
-  message_type: :user_logged_in,
-  message: {
-    id: 1
-  }
+jstreams.publish(
+  :users,
+  event: 'user_logged_in'
+  user_id: 1
 )
 ```
 
 ### Subscriber
 
 ```ruby
-Jstreams.subscribe(:user_activity_logger, :users) do |message, _stream|
+jstreams = Jstreams::Context.new
+
+jstreams.subscribe(:user_activity_logger, :users) do |message, _stream, _subscriber|
   logger.info "User #{name}"
 end
 
-Jstreams.subscribe(:subscriber, ['foo:*', 'bar:*']) do |message, _stream|
+jstreams.subscribe(:subscriber, ['foo:*', 'bar:*']) do |message, _stream, _subscriber|
   logger.info "User #{name}"
 end
+
+# Spawns subscriber threads and blocks
+jstreams.run
 ```
 
 ### Replay
@@ -75,7 +83,7 @@ end
 Starts a temporary copy of the given subscriber until messages have been replayed up to the checkpoint stored at the time replay is called.
 
 ```ruby
-Jstreams.replay(:user_activity_logger, from: message_id)
+jstreams.replay(:user_activity_logger, from: message_id)
 ```
 
 ### Retries
@@ -89,6 +97,8 @@ By default subscribers will process messages indefinitely until successful. Retr
 ### Serialization
 
 ```ruby
+# NOT YET IMPLEMENTED
+
 class Serializer
   MESSAGE_TYPES = {
     user_created: UserCreatedMessage,
@@ -112,7 +122,7 @@ class Serializer
   end
 end
 
-Jstreams.use_serializer(Serializer)
+jstreams = Jstreams::Context.new(serializer: Serializer)
 ```
 
 ## Development
