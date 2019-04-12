@@ -12,10 +12,12 @@ end
 
 group :development do
   gem 'byebug'
+  gem 'debase'
   gem 'pry'
   gem 'pry-byebug'
   gem 'pry-rescue'
   gem 'pry-stack_explorer'
   gem 'rubocop'
   gem 'rubocop-performance'
+  gem 'ruby-debug-ide'
 end
