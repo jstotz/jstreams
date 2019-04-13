@@ -1,3 +1,5 @@
+require_relative 'consumer_group'
+
 module Jstreams
   class Subscriber
     def initialize(
@@ -52,6 +54,7 @@ module Jstreams
                 :logger,
                 :handler,
                 :streams,
+                :redis_pool,
                 :redis,
                 :serializer,
                 :abandoned_message_check_interval,
@@ -195,13 +198,12 @@ module Jstreams
 
     def create_consumer_groups
       streams.each do |stream|
-        begin
-          logger.info "Creating consumer group #{consumer_group} for stream #{stream}"
-          redis.xgroup(:create, stream, consumer_group, 0, mkstream: true)
-        rescue ::Redis::CommandError => e
-          if /BUSYGROUP/.match?(e.message)
-            logger.info 'Consumer group already exists'
-          end
+        group =
+          ConsumerGroup.new(name: consumer_group, stream: stream, redis: redis)
+        if group.create_if_not_exists
+          logger.info "Created consumer group #{consumer_group} for stream #{stream}"
+        else
+          logger.info 'Consumer group already exists'
         end
       end
     end
