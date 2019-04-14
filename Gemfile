@@ -20,4 +20,5 @@ group :development do
   gem 'rubocop'
   gem 'rubocop-performance'
   gem 'ruby-debug-ide'
+  gem 'solargraph'
 end
