@@ -1,10 +1,10 @@
 require 'json'
 require 'connection_pool'
-require 'active_support/tagged_logging'
 
 require_relative 'serializers/json'
 require_relative 'publisher'
 require_relative 'subscriber'
+require_relative 'tagged_logging'
 
 module Jstreams
   class Context
@@ -19,8 +19,7 @@ module Jstreams
       @redis_pool =
         ::ConnectionPool.new(size: 10, timeout: 5) { Redis.new(url: redis_url) }
       @serializer = serializer
-      logger.formatter ||= ::Logger::Formatter.new
-      @logger = ::ActiveSupport::TaggedLogging.new(logger)
+      @logger = TaggedLogging.new(logger)
       @publisher =
         Publisher.new(
           redis_pool: @redis_pool, serializer: serializer, logger: @logger
