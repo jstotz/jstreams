@@ -1,5 +1,6 @@
 require 'set'
 require 'concurrent/array'
+require 'concurrent/hash'
 
 RSpec.describe 'multiple subscribers' do
   before(:each) { Redis.new.flushdb }

@@ -12,7 +12,7 @@ module Jstreams
       @redis.xgroup(:create, @stream, @name, start_id, mkstream: true)
       true
     rescue ::Redis::CommandError => e
-      raise e unless /BUSYGROUP/.match?(e.message)
+      raise e unless /BUSYGROUP/ =~ e.message
       false
     end
   end

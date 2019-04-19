@@ -114,7 +114,7 @@ module Jstreams
       end
       results
     rescue Redis::CommandError => e
-      raise e unless e.message.match?(/NOGROUP/)
+      raise e unless e.message =~ /NOGROUP/
       logger.debug "Couldn't reclaim messages because group does not exist yet"
       {}
     end
@@ -164,7 +164,7 @@ module Jstreams
         block: block
       )
     rescue ::Redis::CommandError => e
-      if /NOGROUP/.match?(e.message)
+      if /NOGROUP/ =~ e.message
         create_consumer_groups
         retry
       end
