@@ -1,4 +1,5 @@
 # jstreams
+
 [![CircleCI](https://circleci.com/gh/jstotz/jstreams.svg?style=svg)](https://circleci.com/gh/jstotz/jstreams)
 [![Maintainability](https://api.codeclimate.com/v1/badges/f37990e1cb4727d2ae71/maintainability)](https://codeclimate.com/github/jstotz/jstreams/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/f37990e1cb4727d2ae71/test_coverage)](https://codeclimate.com/github/jstotz/jstreams/test_coverage)
@@ -13,10 +14,10 @@ This is alpha software and not suitable for production use.
 
 ## Roadmap
 
-- [X] Load balancing across named consumer groups
-- [X] Automatically reclaim messages when consumers die
-- [X] Multi-threaded subscribers
-- [X] Automatic checkpoint storage
+- [x] Load balancing across named consumer groups
+- [x] Automatically reclaim messages when consumers die
+- [x] Multi-threaded subscribers
+- [x] Automatic checkpoint storage
 - [ ] Configurable message serialization
 - [ ] Configurable retry logic
 - [ ] Replay streams from a given checkpoint
@@ -40,9 +41,7 @@ Or install it yourself as:
 
 ## Usage
 
-### Example
-
-#### Publisher
+### Publisher
 
 ```ruby
 jstreams = Jstreams::Context.new
@@ -50,7 +49,7 @@ jstreams = Jstreams::Context.new
 jstreams.publish(
   :users,
   event: 'user_created',
-  user_id: 1,  
+  user_id: 1,
   name: 'King Buzzo'
 )
 
@@ -66,13 +65,15 @@ jstreams.publish(
 ```ruby
 jstreams = Jstreams::Context.new
 
-jstreams.subscribe(:user_activity_logger, :users) do |message, _stream, _subscriber|
-  logger.info "User #{name}"
-end
+jstreams.subscribe(
+  :user_activity_logger,
+  :users
+) { |message, _stream, _subscriber| logger.info "User #{name}" }
 
-jstreams.subscribe(:subscriber, ['foo:*', 'bar:*']) do |message, _stream, _subscriber|
-  logger.info "User #{name}"
-end
+jstreams.subscribe(
+  :subscriber,
+  %w[foo:* bar:*]
+) { |message, _stream, _subscriber| logger.info "User #{name}" }
 
 # Spawns subscriber threads and blocks
 jstreams.run
@@ -88,7 +89,7 @@ jstreams.replay(:user_activity_logger, from: message_id)
 
 ### Retries
 
-By default subscribers will process messages indefinitely until successful. Retries
+By default subscribers will process messages indefinitely until successful.
 
 ```ruby
 # TODO
@@ -97,12 +98,9 @@ By default subscribers will process messages indefinitely until successful. Retr
 ### Serialization
 
 ```ruby
-# NOT YET IMPLEMENTED
-
 class Serializer
   MESSAGE_TYPES = {
-    user_created: UserCreatedMessage,
-    user_logged_in: UserLoggedInMessage
+    user_created: UserCreatedMessage, user_logged_in: UserLoggedInMessage
   }
 
   def serialize(type, message)
@@ -116,9 +114,7 @@ class Serializer
   private
 
   def message_class(type)
-    MESSAGE_TYPES.fetch(type) do
-      raise "Unknown message type: #{type}"
-    end
+    MESSAGE_TYPES.fetch(type) { raise "Unknown message type: #{type}" }
   end
 end
 
