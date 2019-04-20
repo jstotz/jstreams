@@ -179,8 +179,11 @@ module Jstreams
         redis.xack(stream, consumer_group, id)
       rescue => e
         logger.debug do
-          "Error processing message #{[stream, consumer_group, id]
-            .inspect}: #{e}"
+          "Error processing message #{[
+            stream,
+            consumer_group,
+            id
+          ].inspect}: #{e}"
         end
         raise e if @error_handler.nil?
         @error_handler.call(e, stream, id, entry)
