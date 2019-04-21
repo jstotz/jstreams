@@ -19,6 +19,7 @@ group :development do
   gem 'pry-byebug'
   gem 'pry-rescue'
   gem 'pry-stack_explorer'
+  gem 'redcarpet'
   gem 'rubocop'
   gem 'rubocop-performance'
   gem 'ruby-debug-ide'

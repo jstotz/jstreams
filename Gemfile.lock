@@ -78,6 +78,7 @@ GEM
     rb-fsevent (0.10.3)
     rb-inotify (0.10.0)
       ffi (~> 1.0)
+    redcarpet (3.4.0)
     redis (4.1.0)
     reverse_markdown (1.1.0)
       nokogiri
@@ -148,6 +149,7 @@ DEPENDENCIES
   pry-rescue
   pry-stack_explorer
   rake (~> 10.0)
+  redcarpet
   rspec (~> 3.0)
   rspec_junit_formatter
   rubocop
