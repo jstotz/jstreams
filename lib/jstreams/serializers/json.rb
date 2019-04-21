@@ -1,8 +1,9 @@
 require 'json'
+require_relative '../serializer'
 
 module Jstreams
   module Serializers
-    class JSON
+    class JSON < Serializer
       def serialize(message, _stream)
         ::JSON.generate(message)
       end
