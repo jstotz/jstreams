@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    jstreams (0.1.0)
+    jstreams (0.1.0.alpha)
       concurrent-ruby
       connection_pool
       redis (>= 4.1.0)
