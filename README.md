@@ -1,8 +1,9 @@
 # jstreams
 
-[![CircleCI](https://circleci.com/gh/jstotz/jstreams.svg?style=svg)](https://circleci.com/gh/jstotz/jstreams)
-[![Maintainability](https://api.codeclimate.com/v1/badges/f37990e1cb4727d2ae71/maintainability)](https://codeclimate.com/github/jstotz/jstreams/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/f37990e1cb4727d2ae71/test_coverage)](https://codeclimate.com/github/jstotz/jstreams/test_coverage)
+[![Gem](https://img.shields.io/gem/v/jstreams.svg)](https://rubygems.org/gems/jstreams)
+[![CircleCI](https://img.shields.io/circleci/project/github/jstotz/jstreams/master.svg)](https://circleci.com/gh/jstotz/jstreams)
+[![Test Coverage](https://img.shields.io/codeclimate/coverage/jstotz/jstreams.svg)](https://codeclimate.com/github/jstotz/jstreams/test_coverage)
+[![Maintainability](https://img.shields.io/codeclimate/maintainability/jstotz/jstreams.svg)](https://codeclimate.com/github/jstotz/jstreams/maintainability)
 
 A distributed streaming platform for Ruby built on top of Redis Streams.
 
