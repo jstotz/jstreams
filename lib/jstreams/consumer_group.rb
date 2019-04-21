@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Jstreams
   class ConsumerGroup
     def initialize(name:, stream:, redis:)

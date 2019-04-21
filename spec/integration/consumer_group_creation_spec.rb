@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe 'consumer group creation' do
   before(:each) { redis.flushdb }
   after(:each) { jstreams.shutdown }

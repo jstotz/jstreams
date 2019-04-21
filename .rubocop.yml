@@ -1,11 +1,11 @@
 AllCops:
   TargetRubyVersion: "2.3"
   Exclude:
-    - 'node_modules/**/*'
-    - 'vendor/**/*'
-    - 'bin/**/*'
+    - "node_modules/**/*"
+    - "vendor/**/*"
+    - "bin/**/*"
 
-Style:
+Style/Documentation:
   Enabled: false
 Layout:
   Enabled: false

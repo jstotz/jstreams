@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'consumer_group'
 
 module Jstreams
@@ -60,8 +62,8 @@ module Jstreams
                 :abandoned_message_check_interval,
                 :abandoned_message_idle_timeout
 
-    alias_method :consumer_group, :name
-    alias_method :consumer_name, :key
+    alias consumer_group name
+    alias consumer_name key
 
     def process_messages
       @redis_pool.with do |redis|
@@ -123,11 +125,10 @@ module Jstreams
       reclaim_ids = []
       # TODO: pagination & configurable batch size
       read_pending(stream, ABANDONED_MESSAGE_BATCH_SIZE).each do |pe|
-        if pe['consumer'] != consumer_name && abandoned_pending_entry?(pe)
-          logger.info "Reclaiming abandoned message #{pe['entry_id']}" \
-                        " from consumer #{pe['consumer']}"
-          reclaim_ids << pe['entry_id']
-        end
+        next unless pe['consumer'] != consumer_name && abandoned_pending_entry?(pe)
+        logger.info "Reclaiming abandoned message #{pe['entry_id']}" \
+                      " from consumer #{pe['consumer']}"
+        reclaim_ids << pe['entry_id']
       end
 
       return [] if reclaim_ids.empty?
@@ -177,7 +178,7 @@ module Jstreams
         handler.call(deserialize_entry(stream, id, entry), stream, self)
         logger.debug { "ACK message #{[stream, consumer_group, id].inspect}" }
         redis.xack(stream, consumer_group, id)
-      rescue => e
+      rescue StandardError => e
         logger.debug do
           "Error processing message #{[
             stream,
@@ -192,7 +193,7 @@ module Jstreams
 
     def deserialize_entry(stream, id, entry)
       serializer.deserialize(entry['payload'], stream)
-    rescue => e
+    rescue StandardError => e
       # TODO: Allow subscribers to register an error handler.
       # For now we'll just log and skip.
       logger.error "failed to deserialize entry #{id}: #{entry

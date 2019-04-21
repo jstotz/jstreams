@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 if ENV['DOCKER_BUILD']
   version = '0.0.0'
 else
-  lib = File.expand_path('../lib', __FILE__)
+  lib = File.expand_path('lib', __dir__)
   $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
   require 'jstreams/version'
   version = Jstreams::VERSION
@@ -35,7 +37,7 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
   spec.files =
-    Dir.chdir(File.expand_path('..', __FILE__)) do
+    Dir.chdir(File.expand_path(__dir__)) do
       unless ENV['DOCKER_BUILD']
         `git ls-files -z`.split("\x0").reject do |f|
           f.match(%r{^(test|spec|features)/})

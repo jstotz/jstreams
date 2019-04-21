@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'set'
 
 RSpec.describe 'single subscriber' do

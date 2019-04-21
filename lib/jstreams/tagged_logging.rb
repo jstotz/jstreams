@@ -1,4 +1,6 @@
-require "logger"
+# frozen_string_literal: true
+
+require 'logger'
 
 # This is ActiveSupport::TaggedLogging extracted from the activesupport gem
 # and adopted to be used in environments without activesupport's core extensions.
@@ -50,18 +52,19 @@ module Jstreams
     def self.new(logger)
       logger = logger.dup
 
-      if logger.formatter
-        logger.formatter = logger.formatter.dup
-      else
-        # Ensure we set a default formatter so we aren't extending nil!
-        logger.formatter = ::Logger::Formatter.new
-      end
+      logger.formatter =
+        if logger.formatter
+          logger.formatter.dup
+        else
+          # Ensure we set a default formatter so we aren't extending nil!
+          ::Logger::Formatter.new
+        end
 
       logger.formatter.extend Formatter
       logger.extend(self)
     end
 
-    [:push_tags, :pop_tags, :clear_tags!].each do |method_name|
+    %i[push_tags pop_tags clear_tags!].each do |method_name|
       define_method(method_name) do |*args, &block|
         formatter.send(method_name, *args, &block)
       end

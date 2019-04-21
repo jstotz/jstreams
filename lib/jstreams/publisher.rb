@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Jstreams
   class Publisher
     def initialize(redis_pool:, serializer:, logger:)
