@@ -2,7 +2,11 @@
 
 require_relative 'consumer_group'
 
+# :nodoc:
 module Jstreams
+  ##
+  # Retrieves messages from the Redis consumer group and dispatches them
+  # to the handler.
   class Subscriber
     def initialize(
       name:,
@@ -125,7 +129,9 @@ module Jstreams
       reclaim_ids = []
       # TODO: pagination & configurable batch size
       read_pending(stream, ABANDONED_MESSAGE_BATCH_SIZE).each do |pe|
-        next unless pe['consumer'] != consumer_name && abandoned_pending_entry?(pe)
+        unless pe['consumer'] != consumer_name && abandoned_pending_entry?(pe)
+          next
+        end
         logger.info "Reclaiming abandoned message #{pe['entry_id']}" \
                       " from consumer #{pe['consumer']}"
         reclaim_ids << pe['entry_id']
@@ -212,4 +218,6 @@ module Jstreams
       end
     end
   end
+
+  private_constant :Subscriber
 end

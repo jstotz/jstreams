@@ -9,6 +9,9 @@ require_relative 'subscriber'
 require_relative 'tagged_logging'
 
 module Jstreams
+  ##
+  # A collection of jstreams subscribers, their associated threads, and an interface for
+  # publishing messages.
   class Context
     attr_reader :redis_pool, :serializer, :logger
 

@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+# :nodoc:
 module Jstreams
+  ##
+  # Publishes messages to the given stream.
   class Publisher
     def initialize(redis_pool:, serializer:, logger:)
       @redis_pool = redis_pool
@@ -17,4 +20,6 @@ module Jstreams
       end
     end
   end
+
+  private_constant :Publisher
 end

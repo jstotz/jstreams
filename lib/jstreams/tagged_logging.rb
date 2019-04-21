@@ -2,11 +2,13 @@
 
 require 'logger'
 
+##
 # This is ActiveSupport::TaggedLogging extracted from the activesupport gem
 # and adopted to be used in environments without activesupport's core extensions.
-
 module Jstreams
+  # :nodoc:
   module TaggedLogging
+    # :nodoc:
     module Formatter
       def call(severity, timestamp, progname, msg)
         super(severity, timestamp, progname, "#{tags_text}#{msg}")
@@ -79,4 +81,6 @@ module Jstreams
       super if defined?(super)
     end
   end
+
+  private_constant :TaggedLogging
 end

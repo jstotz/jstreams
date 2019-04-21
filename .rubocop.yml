@@ -5,7 +5,7 @@ AllCops:
     - "vendor/**/*"
     - "bin/**/*"
 
-Style/Documentation:
+Style/IfUnlessModifier:
   Enabled: false
 Layout:
   Enabled: false

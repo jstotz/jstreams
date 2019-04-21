@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+# :nodoc:
 module Jstreams
+  ##
+  # A Redis streams Consumer Group
   class ConsumerGroup
     def initialize(name:, stream:, redis:)
       @name = name
@@ -18,4 +21,6 @@ module Jstreams
       false
     end
   end
+
+  private_constant :ConsumerGroup
 end

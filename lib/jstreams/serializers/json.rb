@@ -5,6 +5,8 @@ require_relative '../serializer'
 
 module Jstreams
   module Serializers
+    ##
+    # Simple JSON serializer
     class JSON < Serializer
       def serialize(message, _stream)
         ::JSON.generate(message)
