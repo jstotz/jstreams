@@ -14,11 +14,11 @@ This is alpha software and not suitable for production use.
 
 ## Roadmap
 
-- [x] Load balancing across named consumer groups
-- [x] Automatically reclaim messages when consumers die
-- [x] Multi-threaded subscribers
-- [x] Automatic checkpoint storage
-- [ ] Configurable message serialization
+- [X] Load balancing across named consumer groups
+- [X] Automatically reclaim messages when consumers die
+- [X] Multi-threaded subscribers
+- [X] Automatic checkpoint storage
+- [X] Configurable message serialization
 - [ ] Configurable retry logic
 - [ ] Replay streams from a given checkpoint
 - [ ] Wildcard subscriptions
