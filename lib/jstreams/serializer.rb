@@ -22,7 +22,7 @@ module Jstreams
     ##
     # Deserialize a message from a string into a hash
     #
-    # @param [Hash] message Message to deserialize
+    # @param [String] message Message to deserialize
     # @param [String] stream Source stream name
     #
     # @return [Hash] The deserialized message

@@ -15,6 +15,12 @@ module Jstreams
   class Context
     attr_reader :redis_pool, :serializer, :logger
 
+    ##
+    # Initializes a jstreams context
+    #
+    # @param [String] redis_url Redis URL
+    # @param [Serializer] serializer Message serializer
+    # @param [Logger] logger Logger
     def initialize(
       redis_url: nil,
       serializer: Serializers::JSON.new,
@@ -32,10 +38,23 @@ module Jstreams
       @subscribers = []
     end
 
+    ##
+    # Publishes a message to the given stream
+    #
+    # @param [String] stream Stream name
+    # @param [Hash] message Message to publish
     def publish(stream, message)
       @publisher.publish(stream, message)
     end
 
+    ##
+    # Publishes a message to the given stream
+    #
+    # @param [String] name Subscriber name
+    # @param [String] streams Stream name or array of stream names to follow
+    # @param [String] key Unique consumer name
+    #
+    # @return [Subscriber] Handle to the registered subscriber. Can be used to #unsubscribe
     def subscribe(name, streams, key: name, **kwargs, &block)
       subscriber =
         Subscriber.new(
@@ -52,10 +71,18 @@ module Jstreams
       subscriber
     end
 
+    ##
+    # Unsubscribes the given subscriber
+    #
+    # @param [Subscriber] subscriber Subscriber to unsubscribe
     def unsubscribe(subscriber)
       @subscribers.delete(subscriber)
     end
 
+    ##
+    # Starts each registered subscriber
+    #
+    # @param [Boolean] wait Whether or not to block until subscribers shut down
     def run(wait: true)
       trap('INT') { shutdown }
       Thread.abort_on_exception = true
@@ -64,10 +91,14 @@ module Jstreams
       wait_for_shutdown if wait
     end
 
+    ##
+    # Blocks until all subscribers are shut down
     def wait_for_shutdown
       @subscriber_threads.each(&:join)
     end
 
+    ##
+    # Shuts down each registered subscriber
     def shutdown
       @subscribers.each(&:stop)
     end

@@ -8,6 +8,8 @@ module Jstreams
   # Retrieves messages from the Redis consumer group and dispatches them
   # to the handler.
   class Subscriber
+    ##
+    # Returns a new instance of Subscriber
     def initialize(
       name:,
       key: name,
@@ -33,6 +35,9 @@ module Jstreams
       @need_to_check_own_pending = true
     end
 
+    ##
+    # Starts the subscriber's message handling loop.
+    # Blocks until either a fatal error is raised or #stop is called
     def run
       # TODO: Mutex
       @running = true
@@ -42,6 +47,8 @@ module Jstreams
       end
     end
 
+    ##
+    # Stops the subscriber.
     def stop
       # TODO: Mutex
       logger.info 'Subscriber stopping'

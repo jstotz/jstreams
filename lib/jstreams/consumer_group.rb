@@ -1,10 +1,16 @@
 # frozen_string_literal: true
 
+require 'redis'
+
 # :nodoc:
 module Jstreams
   ##
   # A Redis streams Consumer Group
   class ConsumerGroup
+    ##
+    # @param [String] name Consumer group name
+    # @param [String] stream Stream name
+    # @param [Redis] redis Redis connection
     def initialize(name:, stream:, redis:)
       @name = name
       @stream = stream

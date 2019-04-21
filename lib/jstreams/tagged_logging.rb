@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Style/DocumentationMethod
 require 'logger'
 
 ##
@@ -84,3 +85,5 @@ module Jstreams
 
   private_constant :TaggedLogging
 end
+
+# rubocop:enable Style/DocumentationMethod

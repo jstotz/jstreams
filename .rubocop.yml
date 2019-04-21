@@ -7,6 +7,8 @@ AllCops:
 
 Style/IfUnlessModifier:
   Enabled: false
+Style/DocumentationMethod:
+  Enabled: true
 Layout:
   Enabled: false
 Metrics:
