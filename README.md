@@ -57,7 +57,7 @@ jstreams.publish(
 
 jstreams.publish(
   :users,
-  event: 'user_logged_in'
+  event: 'user_logged_in',
   user_id: 1
 )
 ```
