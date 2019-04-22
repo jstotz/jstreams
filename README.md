@@ -50,7 +50,13 @@ Or install it yourself as:
 ```ruby
 jstreams = Jstreams::Context.new
 
-jstreams.publish(:users, event: 'user_created', user_id: 1, name: 'King Buzzo')
+jstreams.publish(
+  :users,
+  event: 'user_created',
+  user_id: 1,
+  name: 'King Buzzo',
+  email: 'buzzo@example.com'
+)
 
 jstreams.publish(:users, event: 'user_logged_in', user_id: 1)
 ```
@@ -63,12 +69,21 @@ jstreams = Jstreams::Context.new
 jstreams.subscribe(
   :user_activity_logger,
   :users
-) { |message, _stream, _subscriber| logger.info "User #{name}" }
+) do |message, _stream, _subscriber|
+  case message['event']
+  when 'user_created'
+    logger.info "User #{message['name']} created"
+  when 'user_logged_in'
+    logger.info "User #{message['id']} logged in"
+  end
+end
 
 jstreams.subscribe(
-  :subscriber,
-  %w[foo:* bar:*]
-) { |message, _stream, _subscriber| logger.info "User #{name}" }
+  :send_welcome_email,
+  :users
+) do |message, _stream, _subscriber|
+  send_user_welcome_email(message['id']) if message['event'] == 'user_created'
+end
 
 # Spawns subscriber threads and blocks
 jstreams.run
@@ -124,7 +139,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/jstreams. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/jstotz/jstreams. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
@@ -132,4 +147,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the jstreams project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/jstreams/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the jstreams project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/jstotz/jstreams/blob/master/CODE_OF_CONDUCT.md).
