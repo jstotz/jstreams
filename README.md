@@ -14,16 +14,18 @@ Provides a multi-threaded publisher/subscriber.
 
 This is alpha software and not suitable for production use.
 
+## Features
+
+- Load balancing among subscribers within a group
+- Automatically message reassignment when consumers go away
+- Multi-threaded subscribers
+- Configurable message serialization
+
 ## Roadmap
 
-- [X] Load balancing across named consumer groups
-- [X] Automatically reclaim messages when consumers die
-- [X] Multi-threaded subscribers
-- [X] Automatic checkpoint storage
-- [X] Configurable message serialization
-- [ ] Configurable retry logic
-- [ ] Replay streams from a given checkpoint
-- [ ] Wildcard subscriptions
+- Configurable retry logic
+- Replay a stream from a given point
+- Wildcard subscriptions
 
 ## Installation
 
@@ -48,18 +50,9 @@ Or install it yourself as:
 ```ruby
 jstreams = Jstreams::Context.new
 
-jstreams.publish(
-  :users,
-  event: 'user_created',
-  user_id: 1,
-  name: 'King Buzzo'
-)
+jstreams.publish(:users, event: 'user_created', user_id: 1, name: 'King Buzzo')
 
-jstreams.publish(
-  :users,
-  event: 'user_logged_in',
-  user_id: 1
-)
+jstreams.publish(:users, event: 'user_logged_in', user_id: 1)
 ```
 
 ### Subscriber
