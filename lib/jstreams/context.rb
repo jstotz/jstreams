@@ -11,13 +11,13 @@ module Jstreams
     attr_reader :redis_pool, :serializer, :logger
 
     def initialize(
-      redis_url: nil,
+      redis: {},
       serializer: Serializers::JSON.new,
       logger: Logger.new(ENV['JSTREAMS_VERBOSE'] ? STDOUT : File::NULL)
     )
       # TODO: configurable/smart default pool size
       @redis_pool =
-        ::ConnectionPool.new(size: 10, timeout: 5) { Redis.new(url: redis_url) }
+        ::ConnectionPool.new(size: 10, timeout: 5) { Redis.new(redis) }
       @serializer = serializer
       logger.formatter ||= ::Logger::Formatter.new
       @logger = ::ActiveSupport::TaggedLogging.new(logger)
