@@ -80,7 +80,7 @@ module Jstreams
       @redis_pool.with do |redis|
         @redis = redis
         results = read_messages
-        logger.debug 'timed out waiting for messages' if results.empty?
+        logger.debug 'timed out waiting for messages' if ENV['JSTREAMS_VERBOSE'] && results.empty?
         results.each do |stream, entries|
           entries.each do |id, entry|
             logger.tagged("stream:#{stream}", "id:#{id}") do
@@ -92,8 +92,10 @@ module Jstreams
     end
 
     def read_messages
-      logger.debug do
-        "Reading messages (time to reclaim?: #{time_to_reclaim?}, last reclaim: #{@last_reclaim_time})"
+      if ENV['JSTREAMS_VERBOSE']
+        logger.debug do
+          "Reading messages (time to reclaim?: #{time_to_reclaim?}, last reclaim: #{@last_reclaim_time})"
+        end
       end
       return read_own_pending if @need_to_check_own_pending
       results = {}
@@ -126,7 +128,7 @@ module Jstreams
           .inspect}"
       end
       results
-    rescue Redis::CommandError => e
+    rescue ::Redis::CommandError => e
       raise e unless e.message =~ /NOGROUP/
       logger.debug "Couldn't reclaim messages because group does not exist yet"
       {}
@@ -160,7 +162,15 @@ module Jstreams
     end
 
     def read_pending(stream, count)
-      redis.xpending(stream, consumer_group, '-', '+', count)
+      xpending(stream, count)
+    end
+
+    def read_group(block: READ_TIMEOUT * 1000, id: '>')
+      xreadgroup(block, id)
+    rescue ::Redis::CommandError => e
+      raise e unless e.message =~ /NOGROUP/
+      create_consumer_groups
+      retry
     end
 
     def time_to_reclaim?
@@ -168,8 +178,13 @@ module Jstreams
         (Time.now - @last_reclaim_time) >= abandoned_message_check_interval
     end
 
-    def read_group(block: READ_TIMEOUT * 1000, id: '>')
-      logger.debug 'calling xreadgroup'
+    def xpending(stream, count)
+      logger.debug 'calling xpending' if ENV['JSTREAMS_VERBOSE']
+      redis.xpending(stream, consumer_group, '-', '+', count)
+    end
+
+    def xreadgroup(block, id)
+      logger.debug 'calling xreadgroup' if ENV['JSTREAMS_VERBOSE']
       redis.xreadgroup(
         consumer_group,
         consumer_name,
@@ -177,12 +192,6 @@ module Jstreams
         streams.map { id },
         block: block
       )
-    rescue ::Redis::CommandError => e
-      if /NOGROUP/ =~ e.message
-        create_consumer_groups
-        retry
-      end
-      raise
     end
 
     def handle_entry(stream, id, entry)
