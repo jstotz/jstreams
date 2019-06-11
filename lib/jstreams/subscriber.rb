@@ -80,7 +80,7 @@ module Jstreams
       @redis_pool.with do |redis|
         @redis = redis
         results = read_messages
-        logger.debug 'timed out waiting for messages' if ENV['JSTREAMS_VERBOSE'] && results.empty?
+        verbose_logger.debug 'timed out waiting for messages' if results.empty?
         results.each do |stream, entries|
           entries.each do |id, entry|
             logger.tagged("stream:#{stream}", "id:#{id}") do
@@ -92,10 +92,8 @@ module Jstreams
     end
 
     def read_messages
-      if ENV['JSTREAMS_VERBOSE']
-        logger.debug do
-          "Reading messages (time to reclaim?: #{time_to_reclaim?}, last reclaim: #{@last_reclaim_time})"
-        end
+      verbose_logger.debug do
+        "Reading messages (time to reclaim?: #{time_to_reclaim?}, last reclaim: #{@last_reclaim_time})"
       end
       return read_own_pending if @need_to_check_own_pending
       results = {}
@@ -105,25 +103,25 @@ module Jstreams
     end
 
     def read_own_pending
-      logger.debug 'Reading own pending entries'
+      verbose_logger.debug 'Reading own pending entries'
       results = read_group(block: nil, id: 0)
       if results.values.any? { |entries| !entries.empty? }
-        logger.debug { "Own pending entries: #{results}" }
+        verbose_logger.debug { "Own pending entries: #{results}" }
       else
-        logger.debug 'No pending entries'
+        verbose_logger.debug 'No pending entries'
         @need_to_check_own_pending = false
       end
       results
     end
 
     def reclaim_abandoned_messages
-      logger.debug 'Looking for abandoned messages to reclaim'
+      verbose_logger.debug 'Looking for abandoned messages to reclaim'
       results = {}
       streams.each do |stream|
         results[stream] = reclaim_abandoned_messages_in_stream(stream)
       end
       @last_reclaim_time = Time.now
-      logger.debug do
+      verbose_logger.debug do
         "Done looking for abandoned messages to reclaim. Found: #{results
           .inspect}"
       end
@@ -179,12 +177,12 @@ module Jstreams
     end
 
     def xpending(stream, count)
-      logger.debug 'calling xpending' if ENV['JSTREAMS_VERBOSE']
+      verbose_logger.debug 'calling xpending'
       redis.xpending(stream, consumer_group, '-', '+', count)
     end
 
     def xreadgroup(block, id)
-      logger.debug 'calling xreadgroup' if ENV['JSTREAMS_VERBOSE']
+      verbose_logger.debug 'calling xreadgroup'
       redis.xreadgroup(
         consumer_group,
         consumer_name,
@@ -232,6 +230,10 @@ module Jstreams
           logger.info 'Consumer group already exists'
         end
       end
+    end
+
+    def verbose_logger
+      @verbose_logger ||= (ENV['JSTREAMS_VERBOSE'] ? logger : Logger.new(IO::NULL))
     end
   end
 
