@@ -208,6 +208,7 @@ module Jstreams
         end
         raise e if @error_handler.nil?
         @error_handler.call(e, stream, id, entry)
+        @need_to_check_own_pending = true
       end
     end
 
